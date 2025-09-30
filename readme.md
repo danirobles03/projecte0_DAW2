@@ -1,0 +1,1 @@
+L'objectiu de l'aplicació és
