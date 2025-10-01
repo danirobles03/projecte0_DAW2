@@ -1,15 +1,18 @@
-/* const NPREGUNTAS = 10
+const NPREGUNTAS = 10
 
 let estatDeLaPartida = {
   preguntaActual: 0,
   contadorPreguntes: 0,
   respostesUsuari: [], // Aquí anirem guardant les respostes 
   tempsRestant:30
-}; */
+}; 
+
 
 import dades from './data.js';
 
 const partida = document.getElementById("partida");
+const marcador = document.getElementById("marcador");
+const botoEnviar = document.getElementById("enviar");
 const primera = dades.preguntes[0];
 
 // Construïm l'HTML com a string
@@ -30,6 +33,41 @@ window.respostaPremuda = function(index) {
   console.log("Has premut el botó:", index);
 };
 
+function renderitzarPregunta() {
+  const preguntaActual = dades.preguntes[estatDeLaPartida.contadorPreguntes];
+  let html = `
+    <h2>${preguntaActual.pregunta}</h2>
+    <img src="${preguntaActual.imatge}" alt="Bandera" style="width:200px;"><br>
+  `;
+
+  preguntaActual.respostes.forEach((resposta, index) => {
+    html += `<button onclick="respostaPremuda(${index})">${resposta}</button>`;
+  });
+
+  partida.innerHTML = html;
+}
+
+function renderitzarMarcador() {
+  marcador.innerText = `Preguntes respostes: ${estatDeLaPartida.contadorPreguntes} de ${dades.preguntes.length}`;
+}
+
+window.respostaPremuda = function(index) {
+  estatDeLaPartida.respostesUsuari.push(index);
+  estatDeLaPartida.contadorPreguntes++;
+
+  renderitzarMarcador();
+
+  if (estatDeLaPartida.contadorPreguntes < dades.preguntes.length) {
+    renderitzarPregunta();
+  } else {
+    partida.innerHTML = `<p>Has respost totes les preguntes!</p>`;
+    botoEnviar.classList.remove("hidden");
+  }
+};
+
+renderitzarPregunta();
+renderitzarMarcador();
+
 
 
 
@@ -44,7 +82,7 @@ window.respostaPremuda = function(index) {
   actualitzaMarcador();
 };
 
-function actualitzaMarcador() {
+function renderitzarMarcador() {
   let marcador = document.getElementById("marcador");
   let htmlString = `Preguntes respostes ${estatDeLaPartida.contadorPreguntes}/${NPREGUNTAS} <br>`
   htmlString += `temps partida ${estatDeLaPartida.tempsRestant}`
@@ -61,6 +99,7 @@ function actualitzaMarcador() {
 
   htmlString += `<div> <button id="btnBorrar" onclick="EsborrarPartida()" class="btn btn-danger">Borrar Partida</button> </div>`
   marcador.innerHTML = htmlString;
+  
 
 
 
