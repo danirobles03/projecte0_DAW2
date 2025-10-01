@@ -1,13 +1,39 @@
-const NPREGUNTAS = 10
+/* const NPREGUNTAS = 10
 
 let estatDeLaPartida = {
   preguntaActual: 0,
   contadorPreguntes: 0,
   respostesUsuari: [], // Aquí anirem guardant les respostes 
   tempsRestant:30
+}; */
+
+import dades from './data.js';
+
+const partida = document.getElementById("partida");
+const primera = dades.preguntes[0];
+
+// Construïm l'HTML com a string
+let html = ` 
+  <h2>${primera.pregunta }</h2>
+  <img src="${primera.imatge}" alt="Bandera" style="width:200px;"><br>
+`;
+
+primera.respostes.forEach((resposta, index) => {
+  html += `<button onclick="respostaPremuda(${index})">${resposta}</button>`;
+});
+
+// Injectem l'HTML al div
+partida.innerHTML = html;
+
+// Definim la funció que s'executa quan es prem un botó
+window.respostaPremuda = function(index) {
+  console.log("Has premut el botó:", index);
 };
 
-function EsborrarPartida() {
+
+
+
+/*function EsborrarPartida() {
   localStorage.removeItem("partida");
   estatDeLaPartida = {
     preguntaActual: 0,
@@ -210,4 +236,4 @@ window.addEventListener('DOMContentLoaded', (event) => {
         actualitzaMarcador()
       }
     });
-});
+}); */
