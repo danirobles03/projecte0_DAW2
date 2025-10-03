@@ -7,8 +7,25 @@ let estatDeLaPartida = {
   tempsRestant:30
 }; 
 
+let preguntesSeleccionades = [];
 
-import dades from './data.js';
+fetch('data.json')
+  .then(response => response.json())
+  .then(data => {
+    preguntesSeleccionades = data.preguntes
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 10);
+
+    console.log("Preguntes seleccionades:", preguntesSeleccionades);
+
+    renderitzarPregunta();
+    renderitzarMarcador();
+  })
+  .catch(error => {
+    console.error("Error en carregar les preguntes:", error);
+  });
+
+
 
 const partida = document.getElementById("partida");
 const marcador = document.getElementById("marcador");
@@ -21,7 +38,7 @@ window.respostaPremuda = function(index) {
 
 
 function renderitzarPregunta() {
-  const preguntaActual = dades.preguntes[estatDeLaPartida.contadorPreguntes];
+  const preguntaActual = preguntesSeleccionades[estatDeLaPartida.contadorPreguntes];
   console.log("Respostes:", preguntaActual.respostes);
   let html = `
     <h2>${preguntaActual.pregunta}</h2>
@@ -36,25 +53,44 @@ function renderitzarPregunta() {
 }
 
 function renderitzarMarcador() {
-  marcador.innerText = `Preguntes respostes: ${estatDeLaPartida.contadorPreguntes} de ${dades.preguntes.length}`;
+  marcador.innerText = `Preguntes respostes: ${estatDeLaPartida.contadorPreguntes} de ${NPREGUNTAS}`;
+
 }
 
 window.respostaPremuda = function(index) {
+  const preguntaActual = preguntesSeleccionades[estatDeLaPartida.contadorPreguntes];
+  const indexCorrecte = preguntaActual.respostes.findIndex(r => r.correcta);
+
   estatDeLaPartida.respostesUsuari.push(index);
-  estatDeLaPartida.contadorPreguntes++;
 
-  renderitzarMarcador();
-
-  if (estatDeLaPartida.contadorPreguntes < dades.preguntes.length) {
-    renderitzarPregunta();
+  const missatge = document.createElement("p");
+  if (index === indexCorrecte) {
+    missatge.textContent = "✅ Correcte!";
   } else {
-    partida.innerHTML = `<p>Has respost totes les preguntes!</p>`;
-    botoEnviar.classList.remove("hidden");
+    missatge.textContent = "❌ Incorrecte!";
   }
-};
 
-renderitzarPregunta();
-renderitzarMarcador();
+  partida.appendChild(missatge);
+
+  const botoSeguent = document.createElement("button");
+  botoSeguent.textContent = "Següent";
+  botoSeguent.onclick = () => {
+    estatDeLaPartida.contadorPreguntes++;
+    renderitzarMarcador();
+
+    if (estatDeLaPartida.contadorPreguntes < NPREGUNTAS) {
+      renderitzarPregunta();
+    } else {
+      partida.innerHTML = `<p>Has respost totes les preguntes!</p>`;
+      botoEnviar.classList.remove("hidden");
+    }
+  };
+
+   partida.appendChild(botoSeguent);
+
+   const botons = partida.querySelectorAll("button");
+  botons.forEach(b => b.disabled = true);
+};
 /*
 
 function iniciarPartida(preguntes) {
@@ -246,16 +282,6 @@ function imprimirJuego(data) {
     let params = new URLSearchParams();
     params.append("contadorPreguntes", estatDeLaPartida.contadorPreguntes);
     params.append("respostesUsuari", JSON.stringify(estatDeLaPartida.respostesUsuari));*/
-
-fetch('data.json')
-  .then(response => response.json())
-  .then(data => {
-    console.log("Dades carregades!", data);
-    iniciarPartida(data.preguntes);
-  })
-  .catch(error => {
-    console.error("Error en carregar les dades:", error);
-  });
 
   /*
     fetch(url, {
