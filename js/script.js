@@ -13,35 +13,23 @@ import dades from './data.js';
 const partida = document.getElementById("partida");
 const marcador = document.getElementById("marcador");
 const botoEnviar = document.getElementById("enviar");
-const primera = dades.preguntes[0];
-
-// Construïm l'HTML com a string
-let html = ` 
-  <h2>${primera.pregunta }</h2>
-  <img src="${primera.imatge}" alt="Bandera" style="width:200px;"><br>
-`;
-
-primera.respostes.forEach((resposta, index) => {
-  html += `<button onclick="respostaPremuda(${index})">${resposta}</button>`;
-});
-
-// Injectem l'HTML al div
-partida.innerHTML = html;
 
 // Definim la funció que s'executa quan es prem un botó
 window.respostaPremuda = function(index) {
   console.log("Has premut el botó:", index);
 };
 
+
 function renderitzarPregunta() {
   const preguntaActual = dades.preguntes[estatDeLaPartida.contadorPreguntes];
+  console.log("Respostes:", preguntaActual.respostes);
   let html = `
     <h2>${preguntaActual.pregunta}</h2>
     <img src="${preguntaActual.imatge}" alt="Bandera" style="width:200px;"><br>
   `;
 
   preguntaActual.respostes.forEach((resposta, index) => {
-    html += `<button onclick="respostaPremuda(${index})">${resposta}</button>`;
+    html += `<button onclick="respostaPremuda(${index})">${resposta.resposta}</button>`;
   });
 
   partida.innerHTML = html;
@@ -67,6 +55,12 @@ window.respostaPremuda = function(index) {
 
 renderitzarPregunta();
 renderitzarMarcador();
+/*
+
+function iniciarPartida(preguntes) {
+  const primera = preguntes[0];
+  document.getElementById("pregunta").textContent = primera.enunciat;
+}
 
 
 
@@ -251,8 +245,19 @@ function imprimirJuego(data) {
     // 3) Enviar como x-www-form-urlencoded
     let params = new URLSearchParams();
     params.append("contadorPreguntes", estatDeLaPartida.contadorPreguntes);
-    params.append("respostesUsuari", JSON.stringify(estatDeLaPartida.respostesUsuari));
+    params.append("respostesUsuari", JSON.stringify(estatDeLaPartida.respostesUsuari));*/
 
+fetch('data.json')
+  .then(response => response.json())
+  .then(data => {
+    console.log("Dades carregades!", data);
+    iniciarPartida(data.preguntes);
+  })
+  .catch(error => {
+    console.error("Error en carregar les dades:", error);
+  });
+
+  /*
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
