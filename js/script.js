@@ -4,12 +4,13 @@ let estatDeLaPartida = {
   preguntaActual: 0,
   contadorPreguntes: 0,
   respostesUsuari: [], // Aquí anirem guardant les respostes 
-  tempsRestant:30
+  tempsRestant:30,
+  encerts:0
 }; 
 
 let preguntesSeleccionades = [];
 
-fetch('data.json')
+fetch('js/data.json')
   .then(response => response.json())
   .then(data => {
     preguntesSeleccionades = data.preguntes
@@ -17,6 +18,11 @@ fetch('data.json')
       .slice(0, 10);
 
     console.log("Preguntes seleccionades:", preguntesSeleccionades);
+    
+    const estatGuardat = localStorage.getItem("estatDeLaPartida");
+    if (estatGuardat) {
+      estatDeLaPartida = JSON.parse(estatGuardat);
+    }
 
     renderitzarPregunta();
     renderitzarMarcador();
@@ -24,6 +30,30 @@ fetch('data.json')
   .catch(error => {
     console.error("Error en carregar les preguntes:", error);
   });
+
+  function enviarRespostes() {
+    fetch('finalitza.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        respostes: estatDeLaPartida.respostesUsuari
+      })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Error en enviar les respostes");
+      return response.json();
+    })
+    .then(data => {
+      console.log("Respostes enviades correctament:", data);
+      alert("Respostes enviades!");
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("No s'han pogut enviar les respostes.");
+    });
+  }
 
 
 
@@ -53,8 +83,13 @@ function renderitzarPregunta() {
 }
 
 function renderitzarMarcador() {
-  marcador.innerText = `Preguntes respostes: ${estatDeLaPartida.contadorPreguntes} de ${NPREGUNTAS}`;
+  marcador.innerText = `Preguntes encertades: ${estatDeLaPartida.encerts} de ${estatDeLaPartida.contadorPreguntes}`;
 
+}
+
+function reiniciarPartida() {
+  localStorage.removeItem("estatDeLaPartida");
+  location.reload(); // Recarga la página
 }
 
 window.respostaPremuda = function(index) {
@@ -64,33 +99,61 @@ window.respostaPremuda = function(index) {
   estatDeLaPartida.respostesUsuari.push(index);
 
   const missatge = document.createElement("p");
+  estatDeLaPartida.contadorPreguntes++;
   if (index === indexCorrecte) {
     missatge.textContent = "✅ Correcte!";
+    estatDeLaPartida.encerts++;
+    renderitzarMarcador();
   } else {
     missatge.textContent = "❌ Incorrecte!";
+    renderitzarMarcador();
   }
+  
 
   partida.appendChild(missatge);
+  localStorage.setItem("estatDeLaPartida", JSON.stringify(estatDeLaPartida));
+
 
   const botoSeguent = document.createElement("button");
   botoSeguent.textContent = "Següent";
+  partida.appendChild(botoSeguent);
   botoSeguent.onclick = () => {
-    estatDeLaPartida.contadorPreguntes++;
     renderitzarMarcador();
-
+    
     if (estatDeLaPartida.contadorPreguntes < NPREGUNTAS) {
       renderitzarPregunta();
     } else {
-      partida.innerHTML = `<p>Has respost totes les preguntes!</p>`;
+      partida.innerHTML = `<p>Has respost totes les preguntes i has encertat ${estatDeLaPartida.encerts} de ${estatDeLaPartida.contadorPreguntes}preguntes!</p>`;
       botoEnviar.classList.remove("hidden");
     }
   };
 
-   partida.appendChild(botoSeguent);
-
-   const botons = partida.querySelectorAll("button");
-  botons.forEach(b => b.disabled = true);
+   const botonsResposta = partida.querySelectorAll("button");
+   botonsResposta.forEach(b => {
+    if (b.textContent !== "Següent") {
+      b.disabled = true;
+    }
+  });
 };
+
+if (estatDeLaPartida.contadorPreguntes >= NPREGUNTAS) {
+  partida.innerHTML = `<p>Has respost totes les preguntes!</p>`;
+  botoEnviar.classList.remove("hidden");
+
+  // ✅ Enviar les respostes
+  enviarRespostes();
+}
+
+const estatGuardat = localStorage.getItem("estatDeLaPartida");
+if (estatGuardat) {
+  const estat = JSON.parse(estatGuardat);
+  if (estat.contadorPreguntes >= NPREGUNTAS) {
+    localStorage.removeItem("estatDeLaPartida");
+    location.reload();
+  } else {
+    estatDeLaPartida = estat;
+  }
+}
 /*
 
 function iniciarPartida(preguntes) {
@@ -291,7 +354,7 @@ function imprimirJuego(data) {
     })
       .then(res => res.text())
       .then(data => console.log("URLEncoded ->", data));
-  })
+})
 
 }
 
