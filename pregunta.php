@@ -1,6 +1,16 @@
 <?php
 session_start();
 
+if (!isset($_SESSION['preguntes'])) {
+    $json = file_get_contents('data.json');
+    $dades = json_decode($json, true);
+    shuffle($dades['preguntes']);
+    $_SESSION['preguntes'] = array_slice($dades['preguntes'], 0, 10);
+    $_SESSION['respostes'] = [];
+    $_SESSION['actual'] = 0;
+}
+
+
 $actual = $_SESSION['actual'];
 $pregunta = $_SESSION['preguntes'][$actual];
 
@@ -8,6 +18,7 @@ if ($actual >= count($_SESSION['preguntes'])) {
     header("Location: resultat.php");
     exit;
 }
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resposta = intval($_POST['resposta']);
@@ -23,7 +34,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     echo "<p>" . ($encertada ? "✅ Correcte!" : "❌ Incorrecte!") . "</p>";
     echo "<form method='get' action='pregunta.php'><button type='submit'>Següent</button></form>";
+
+    if ($_SESSION['actual'] >= count($_SESSION['preguntes'])) {
+    $respostes = $_SESSION['respostes'];
+    $encerts = array_filter($respostes);
+    echo "<h1>Resultat final</h1>";
+    echo "<p>Has encertat " . count($encerts) . " de " . count($respostes) . " preguntes.</p>";
+    echo "<form method='get'><button type='submit' name='reiniciar'>Tornar a començar</button></form>";
     exit;
+}
+
+if (isset($_GET['reiniciar'])) {
+    session_destroy();
+    header("Location: pregunta.php");
+    exit;
+}
+
 }
 ?>
 
